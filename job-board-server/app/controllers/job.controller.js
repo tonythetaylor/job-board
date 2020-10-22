@@ -14,8 +14,15 @@ exports.create = (req, res) => {
 
   // Create a Job
   const job = {
+    req_id: req.body.req_id,
     title: req.body.title,
     description: req.body.description,
+    title: req.body.title,
+    location: req.body.location,
+    applied_on: req.body.applied_on,
+    status: req.body.status,
+    comments: req.body.comments,
+    hiring_manager: req.body.hiring_manager,
     published: req.body.published ? req.body.published : false
   };
 
