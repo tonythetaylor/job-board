@@ -3,6 +3,7 @@ import JobDataService from "../services/JobService";
 import { Link } from "react-router-dom";
 import { CSVLink } from "react-csv";
 import { DateTime } from 'luxon';
+import Pagination from "@material-ui/lab/Pagination";
 
 const dt = DateTime.local();
 
@@ -11,26 +12,62 @@ const JobsList = () => {
   const [currentJob, setCurrentJob] = useState(null);
   const [currentIndex, setCurrentIndex] = useState(-1);
   const [searchTitle, setSearchTitle] = useState("");
-  
 
-  useEffect(() => {
-    retrieveJobs();
-  }, []);
+  // pagination 
+  const [page, setPage] = useState(1);
+  const [count, setCount] = useState(0);
+  const [pageSize, setPageSize] = useState(1);
 
-  const onChangeSearchTitle = e => {
+  const pageSizes = [3, 6, 9];
+
+  const onChangeSearchTitle = (e) => {
     const searchTitle = e.target.value;
     setSearchTitle(searchTitle);
   };
 
+  const getRequestParams = (searchTitle, page, pageSize) => {
+    let params = {};
+
+    if (searchTitle) {
+      params["title"] = searchTitle;
+    }
+
+    if (page) {
+      params["page"] = page - 1;
+    }
+
+    if (pageSize) {
+      params["size"] = pageSize;
+    }
+
+    return params;
+  };
+
   const retrieveJobs = () => {
-    JobDataService.getAll()
-      .then(response => {
-        setJobs(response.data);
+    const params = getRequestParams(searchTitle, page, pageSize);
+    
+    JobDataService.getAll(params)
+      .then((response) => {
+        const { jobs, totalPages } = response.data;
+        setJobs(jobs);
+        setCount(totalPages);
+
         console.log(response.data);
       })
-      .catch(e => {
+      .catch((e) => {
         console.log(e);
       });
+  };
+
+  useEffect(retrieveJobs, [page, pageSize]);
+
+  const handlePageChange = (event, value) => {
+    setPage(value);
+  };
+
+  const handlePageSizeChange = (event) => {
+    setPageSize(event.target.value);
+    setPage(1);
   };
 
   const refreshList = () => {
@@ -91,6 +128,28 @@ const JobsList = () => {
       <div className="col-md-6">
         <h4>Jobs List</h4>
 
+        <div className="mt-3">
+          {"Items per Page: "}
+          <select onChange={handlePageSizeChange} value={pageSize}>
+            {pageSizes.map((size) => (
+              <option key={size} value={size}>
+                {size}
+              </option>
+            ))}
+          </select>
+
+          <Pagination
+            className="my-3"
+            count={count}
+            page={page}
+            siblingCount={1}
+            boundaryCount={1}
+            variant="outlined"
+            shape="rounded"
+            onChange={handlePageChange}
+          />
+        </div>
+
         <ul className="list-group">
           {jobs &&
             jobs.map((job, index) => (
@@ -119,6 +178,12 @@ const JobsList = () => {
             <h4>Job</h4>
             <div>
               <label>
+                <strong>Req ID:</strong>
+              </label>{" "}
+              {currentJob.req_id}
+            </div>
+            <div>
+              <label>
                 <strong>Title:</strong>
               </label>{" "}
               {currentJob.title}
@@ -128,6 +193,36 @@ const JobsList = () => {
                 <strong>Description:</strong>
               </label>{" "}
               {currentJob.description}
+            </div>
+            <div>
+              <label>
+                <strong>Location:</strong>
+              </label>{" "}
+              {currentJob.location}
+            </div>
+            <div>
+              <label>
+                <strong>Applied On:</strong>
+              </label>{" "}
+              {currentJob.applied_on}
+            </div>
+            <div>
+              <label>
+                <strong>App Status:</strong>
+              </label>{" "}
+              {currentJob.status}
+            </div>
+            <div>
+              <label>
+                <strong>Comments:</strong>
+              </label>{" "}
+              {currentJob.comments}
+            </div>
+            <div>
+              <label>
+                <strong>Hiring Manager:</strong>
+              </label>{" "}
+              {currentJob.hiring_manager}
             </div>
             <div>
               <label>
@@ -148,6 +243,7 @@ const JobsList = () => {
             <br />
             <p>Please click on a Job...</p>
             <p>-or-</p>
+            {console.log(jobs)}
             <CSVLink 
               data={jobs}
               filename={`job_list_${dt}.csv`}

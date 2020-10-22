@@ -2,6 +2,22 @@ const db = require("../models");
 const Job = db.jobs;
 const Op = db.Sequelize.Op;
 
+// pagination 
+const getPagination = (page, size) => {
+  const limit = size ? +size : 3;
+  const offset = page ? page * limit : 0;
+
+  return { limit, offset };
+};
+
+const getPagingData = (data, page, limit) => {
+  const { count: totalItems, rows: jobs } = data;
+  const currentPage = page ? +page : 0;
+  const totalPages = Math.ceil(totalItems / limit);
+
+  return { totalItems, jobs, totalPages, currentPage };
+};
+
 // Create and Save a new Job
 exports.create = (req, res) => {
     // Validate request
@@ -17,7 +33,6 @@ exports.create = (req, res) => {
     req_id: req.body.req_id,
     title: req.body.title,
     description: req.body.description,
-    title: req.body.title,
     location: req.body.location,
     applied_on: req.body.applied_on,
     status: req.body.status,
@@ -42,12 +57,15 @@ exports.create = (req, res) => {
 
 // Retrieve all Jobs from the database.
 exports.findAll = (req, res) => {
-    const title = req.query.title;
-  var condition = title ? { title: { [Op.iLike]: `%${title}%` } } : null;
+  const { page, size, title } = req.query;
+  var condition = title ? { title: { [Op.like]: `%${title}%` } } : null;
 
-  Job.findAll({ where: condition })
+  const { limit, offset } = getPagination(page, size);
+
+  Job.findAndCountAll({ where: condition, limit, offset })
     .then(data => {
-      res.send(data);
+      const response = getPagingData(data, page, limit);
+      res.send(response);
     })
     .catch(err => {
       res.status(500).send({
@@ -55,7 +73,6 @@ exports.findAll = (req, res) => {
           err.message || "Some error occurred while retrieving jobs."
       });
     });
-  
 };
 
 // Find a single Job with an id
@@ -146,15 +163,20 @@ exports.deleteAll = (req, res) => {
 
 // Find all published Jobs
 exports.findAllPublished = (req, res) => {
-    Job.findAll({ where: { published: true } })
-    .then(data => {
-      res.send(data);
-    })
-    .catch(err => {
-      res.status(500).send({
-        message:
-          err.message || "Some error occurred while retrieving jobs."
-      });
+  const { page, size } = req.query;
+  const { limit, offset } = getPagination(page, size);
+
+  Job.findAndCountAll({ where: { published: true }, limit, offset })
+  .then(data => {
+    const response = getPagingData(data, page, limit);
+    res.send(response);
+  })
+  .catch(err => {
+    res.status(500).send({
+      message:
+        err.message || "Some error occurred while retrieving jobs."
     });
+  });
+
   
 };

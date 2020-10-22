@@ -4,8 +4,14 @@ import JobDataService from "../services/JobService";
 const Job = props => {
   const initialJobState = {
     id: null,
+    req_id: "",
     title: "",
     description: "",
+    location: "",
+    applied_on: "",
+    status: "",
+    comments: "",
+    hiring_manager: "",
     published: false
   };
   const [currentJob, setCurrentJob] = useState(initialJobState);
@@ -77,6 +83,17 @@ const Job = props => {
         <div className="edit-form">
           <h4>Job</h4>
           <form>
+            <div className="form-group">
+              <label htmlFor="req_id">Req ID</label>
+              <input
+                type="text"
+                className="form-control"
+                id="req_id"
+                name="req_id"
+                value={currentJob.req_id}
+                onChange={handleInputChange}
+              />
+            </div>
             <div className="form-group">
               <label htmlFor="title">Title</label>
               <input
