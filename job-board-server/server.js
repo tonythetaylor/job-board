@@ -28,6 +28,7 @@ app.get("/", (req, res) => {
 });
 
 require("./app/routes/job.routes")(app);
+require("./app/routes/download.routes")(app);
 
 // set port, listen for requests
 const PORT = process.env.PORT || 8080;

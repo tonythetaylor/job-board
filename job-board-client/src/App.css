@@ -53,3 +53,22 @@
   margin: auto;
 }
 
+.col-md-6 {
+  border-color: black;
+  border-bottom: solid;
+  border-top: solid;
+  padding: 20px;
+}
+
+.bg-dark {
+  background-color: #003365!important;
+}
+
+.job-details {
+  text-align: center;
+}
+
+.job-details-button {
+  justify-content: center;
+  display: flex;
+}

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import JobDataService from "../services/JobService";
+import DownloadDataService from "../services/DownloadService";
+
 import { Link } from "react-router-dom";
 import { CSVLink } from "react-csv";
 import { DateTime } from 'luxon';
@@ -12,11 +14,12 @@ const JobsList = () => {
   const [currentJob, setCurrentJob] = useState(null);
   const [currentIndex, setCurrentIndex] = useState(-1);
   const [searchTitle, setSearchTitle] = useState("");
+  const [downloads, setDownloadJobs] = useState([]);
 
   // pagination 
   const [page, setPage] = useState(1);
   const [count, setCount] = useState(0);
-  const [pageSize, setPageSize] = useState(1);
+  const [pageSize, setPageSize] = useState(3);
 
   const pageSizes = [3, 6, 9];
 
@@ -43,8 +46,19 @@ const JobsList = () => {
     return params;
   };
 
+  const downloadJobs = () => {
+    DownloadDataService.getAll()
+      .then(response => {
+        setDownloadJobs(response.data);
+        console.log(response.data);
+      })
+      .catch(e => {
+        console.log(e);
+      });
+  };
+
   const retrieveJobs = () => {
-    const params = getRequestParams(searchTitle, page, pageSize);
+    const params = getRequestParams(searchTitle.toUpperCase(), page, pageSize);
     
     JobDataService.getAll(params)
       .then((response) => {
@@ -60,6 +74,9 @@ const JobsList = () => {
   };
 
   useEffect(retrieveJobs, [page, pageSize]);
+  useEffect(() => {
+    downloadJobs();
+  }, []);
 
   const handlePageChange = (event, value) => {
     setPage(value);
@@ -70,66 +87,61 @@ const JobsList = () => {
     setPage(1);
   };
 
-  const refreshList = () => {
-    retrieveJobs();
-    setCurrentJob(null);
-    setCurrentIndex(-1);
-  };
+
+  // TODO: add back when auth is added
+  // const refreshList = () => {
+  //   downloadJobs();
+  //   retrieveJobs();
+  //   setCurrentJob(null);
+  //   setCurrentIndex(-1);
+  // };
 
   const setActiveJob = (job, index) => {
     setCurrentJob(job);
     setCurrentIndex(index);
   };
 
-  const removeAllJobs = () => {
-    JobDataService.removeAll()
-      .then(response => {
-        console.log(response.data);
-        refreshList();
-      })
-      .catch(e => {
-        console.log(e);
-      });
-  };
+  // TODO: add back when auth is added 
+  // const removeAllJobs = () => {
+  //   JobDataService.removeAll()
+  //     .then(response => {
+  //       console.log(response.data);
+  //       refreshList();
+  //     })
+  //     .catch(e => {
+  //       console.log(e);
+  //     });
+  // };
 
-  const findByTitle = () => {
-    JobDataService.findByTitle(searchTitle)
-      .then(response => {
-        setJobs(response.data);
-        console.log(response.data);
-      })
-      .catch(e => {
-        console.log(e);
-      });
-  };
+  const toggleJobDetails = () => setCurrentJob(!currentJob);
 
   return (
     <div className="list row">
-      <div className="col-md-8">
+      <div className="col-md-12">
         <div className="input-group mb-3">
           <input
             type="text"
             className="form-control"
-            placeholder="Search by title"
+            placeholder="Search by job title"
             value={searchTitle}
             onChange={onChangeSearchTitle}
           />
           <div className="input-group-append">
-            <button
+          <button
               className="btn btn-outline-secondary"
               type="button"
-              onClick={findByTitle}
+              onClick={retrieveJobs}
             >
               Search
-            </button>
+          </button>
           </div>
         </div>
       </div>
       <div className="col-md-6">
         <h4>Jobs List</h4>
-
+        <hr />
         <div className="mt-3">
-          {"Items per Page: "}
+          {"Jobs per Page: "}
           <select onChange={handlePageSizeChange} value={pageSize}>
             {pageSizes.map((size) => (
               <option key={size} value={size}>
@@ -164,18 +176,18 @@ const JobsList = () => {
               </li>
             ))}
         </ul>
-
-        <button
+        {/* <button
           className="m-3 btn btn-sm btn-danger"
           onClick={removeAllJobs}
         >
           Remove All
-        </button>
+        </button> */}
       </div>
       <div className="col-md-6">
         {currentJob ? (
           <div>
-            <h4>Job</h4>
+            <h4>Job Details</h4>
+            <hr />
             <div>
               <label>
                 <strong>Req ID:</strong>
@@ -233,21 +245,28 @@ const JobsList = () => {
 
             <Link
               to={"/jobs/" + currentJob.id}
-              className="badge badge-warning"
+              className="m-3 btn btn-sm btn-warning"
             >
               Edit
             </Link>
+            <button
+              className="m-3 btn btn-sm btn-primary"
+              onClick={toggleJobDetails}
+            >
+              Clear Details
+            </button>
           </div>
         ) : (
           <div>
+            <h4>Job Details</h4>
+            <hr />
             <br />
-            <p>Please click on a Job...</p>
-            <p>-or-</p>
-            {console.log(jobs)}
+            <p className="job-details">Please click on a Job</p>
+            <p className="job-details">-or-</p>
             <CSVLink 
-              data={jobs}
+              data={downloads}
               filename={`job_list_${dt}.csv`}
-              className="btn btn-primary"
+              className="btn btn-primary job-details-button"
               target="_blank"
               >
                 Download Jobs
