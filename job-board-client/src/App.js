@@ -12,7 +12,7 @@ function App() {
     <div>
       <nav className="navbar navbar-expand navbar-dark bg-dark">
         <a href="/jobs" className="navbar-brand">
-          Taylor'd Jobs
+          Jobs Applied List
         </a>
         <div className="navbar-nav mr-auto">
           <li className="nav-item">
